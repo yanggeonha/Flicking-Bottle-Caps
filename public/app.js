@@ -18,9 +18,10 @@ $('#pinInput').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'').slice(
 $('#enterButton').onclick=()=>{ const name=$('#nameInput').value.trim(); $('#errorText').textContent=''; if(mode==='create') socket.emit('room:create',{name,cap:selectedCap}); else socket.emit('room:join',{code:$('#pinInput').value,name,cap:selectedCap}); };
 socket.on('game:error',msg=>{ $('#errorText').textContent=msg; if(state) alert(msg); });
 socket.on('room:update',room=>{ const first=!state; state=room; if(first){$('#home').classList.add('hidden');$('#game').classList.remove('hidden');$('#roomBadge').classList.remove('hidden');} render(); });
-socket.on('game:flicked',({playerId,distance})=>{ const el=document.querySelector(`[data-player="${playerId}"]`); if(el) el.style.bottom=`${8 + distance*.82}%`; });
+socket.on('game:flicked',({playerId,distance,duration})=>{ const el=document.querySelector(`[data-player="${playerId}"]`); if(!el)return; el.classList.remove('dragging','current'); el.style.transition=`bottom ${duration}ms cubic-bezier(.16,.72,.22,1), transform ${duration}ms cubic-bezier(.16,.72,.22,1)`; requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.transform='translateX(var(--cap-x, 0px)) rotate(540deg)';el.style.bottom=capBottom(distance);})); });
 socket.on('game:ended',()=>{ alert('방장이 게임을 종료했습니다.'); location.reload(); });
 
+function capBottom(distance){ return distance==null?'170px':`calc(170px + ${distance*.62}%)`; }
 function render(){
   const me=state.players.find(p=>p.id===socket.id), isHost=state.hostId===socket.id, current=state.players[state.turnIndex];
   $('#roomCode').textContent=$('#roomCodeTop').textContent=state.code; $('#roundNumber').textContent=state.round; $('#roundBadge').textContent=`ROUND ${state.round}`; $('#playerCount').textContent=state.players.length;
@@ -28,7 +29,7 @@ function render(){
   $('#statusTitle').textContent=state.status==='lobby'?'선수 대기실':state.status==='playing'?(current?.id===socket.id?'내 차례입니다!':`${current?.name}의 차례`):'경기 종료';
   const ranked=[...state.players].sort((a,b)=>(b.distance??-1)-(a.distance??-1));
   $('#rankingList').innerHTML=ranked.map((p,i)=>`<div class="rank-row ${current?.id===p.id&&state.status==='playing'?'turn':''}"><span class="rank">${p.finished?i+1:'·'}</span>${capHtml(p.cap)}<div><strong>${p.name}${p.id===state.hostId?' 👑':''}</strong><small>${p.id===socket.id?'나 · ':''}${p.finished?'도전 완료':current?.id===p.id?'지금 도전 중':'차례 대기'}</small></div><span class="score">${p.distance!=null?`${p.distance.toFixed(1)}%`:'—'}</span></div>`).join('');
-  $('#capsLayer').innerHTML=state.players.map((p,i)=>{const c=capInfo(p.cap), x=(i-(state.players.length-1)/2)*64; return `<div class="cap ${p.id===socket.id?'mine':''} ${current?.id===p.id&&state.status==='playing'?'current':''}" data-player="${p.id}" style="background:${c.color};--cap-x:${x}px;bottom:${p.distance!=null?8+p.distance*.82:8}%">${c.short}</div>`}).join('');
+  $('#capsLayer').innerHTML=state.players.map((p,i)=>{const c=capInfo(p.cap), x=(i-(state.players.length-1)/2)*64; return `<div class="cap ${p.id===socket.id?'mine':''} ${current?.id===p.id&&state.status==='playing'?'current':''}" data-player="${p.id}" style="background:${c.color};--cap-x:${x}px;bottom:${capBottom(p.distance)}">${c.short}</div>`}).join('');
   const myTurn=state.status==='playing'&&current?.id===socket.id&&!me?.finished;
   $('#powerWrap').classList.toggle('hidden',!myTurn); $('#aimGuide').classList.toggle('hidden',!myTurn);
   $('#turnGuide').textContent=state.status==='lobby'?(isHost?'모두 준비되면 게임을 시작하세요.':'방장이 게임을 시작할 때까지 기다려 주세요.'):myTurn?'내 병뚜껑을 아래로 당겼다가 놓으세요!':state.status==='playing'?`${current?.name} 선수의 도전을 지켜보세요.`:'결과를 확인하세요!';

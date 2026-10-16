@@ -6,8 +6,12 @@
 
 .table {
   width: min(100%, 680px);
-  height: 680px;
+  height: 820px;
   margin: 0 auto;
+}
+
+.table .start-line {
+  bottom: 205px;
 }
 
 .table .cap {
@@ -15,9 +19,9 @@
 }
 
 @media (max-width: 900px) {
-  .table { height: 620px; }
+  .table { height: 760px; }
 }
 
 @media (max-width: 520px) {
-  .table { height: 560px; }
+  .table { height: 700px; }
 }
