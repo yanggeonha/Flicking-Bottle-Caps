@@ -86,14 +86,19 @@ io.on('connection', socket => {
     const player = room.players[room.turnIndex];
     if (!player || player.id !== socket.id || player.finished) return fail(socket, '지금은 내 차례가 아니에요.');
     power = Math.max(0.08, Math.min(1, Number(power) || 0));
-    const jitter = (Math.random() - 0.5) * 2.5;
-    player.distance = Math.max(5, Math.min(99.2, 5 + power * 94 + jitter));
+    player.distance = power * 125;
     player.finished = true;
     const duration = Math.round(1400 - power * 820);
+    room.status = 'flying';
     io.to(room.code).emit('game:flicked', { playerId: player.id, power, distance: player.distance, duration });
-    room.turnIndex += 1;
-    if (room.turnIndex >= room.players.length) room.status = 'finished';
-    setTimeout(() => broadcast(room), duration + 120);
+    const round = room.round;
+    setTimeout(() => {
+      if (rooms.get(room.code) !== room || room.round !== round || room.status !== 'flying') return;
+      const next = room.players.findIndex(p => !p.finished);
+      room.turnIndex = next < 0 ? room.players.length : next;
+      room.status = next < 0 ? 'finished' : 'playing';
+      broadcast(room);
+    }, duration + 120);
   });
 
   socket.on('game:restart', () => {

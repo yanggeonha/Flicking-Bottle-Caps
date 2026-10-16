@@ -6,22 +6,47 @@
 
 .table {
   width: min(100%, 680px);
-  height: 820px;
+  height: 1000px;
   margin: 0 auto;
+  overflow: visible;
+  --launch-bottom: 340px;
 }
 
 .table .start-line {
-  bottom: 205px;
+  bottom: calc(var(--launch-bottom) + 29px);
 }
 
 .table .cap {
   transform: translateX(var(--cap-x, 0px));
+  transition: none;
+  will-change: transform;
+}
+
+.table .cap.current {
+  animation: none;
+  box-shadow: 0 0 0 5px #fff5, 0 5px 8px #0004;
+}
+
+.table .cap.dragging {
+  animation: none;
+  z-index: 6;
+}
+
+.table .cap.out {
+  visibility: hidden;
+}
+
+.table .aim-guide {
+  bottom: calc(var(--launch-bottom) + 29px);
 }
 
 @media (max-width: 900px) {
-  .table { height: 760px; }
+  .table { height: 940px; }
 }
 
 @media (max-width: 520px) {
-  .table { height: 700px; }
+  .table { height: 880px; }
+  .table .start-line, .table .aim-guide {
+    bottom: calc(var(--launch-bottom) + 25px);
+  }
 }
