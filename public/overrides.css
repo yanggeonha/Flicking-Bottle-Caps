@@ -1,0 +1,23 @@
+/* 세로형 경기장과 더 긴 병뚜껑 당김 동작 */
+.table-scene {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.table {
+  width: min(100%, 680px);
+  height: 680px;
+  margin: 0 auto;
+}
+
+.table .cap {
+  transform: translateX(var(--cap-x, 0px));
+}
+
+@media (max-width: 900px) {
+  .table { height: 620px; }
+}
+
+@media (max-width: 520px) {
+  .table { height: 560px; }
+}
