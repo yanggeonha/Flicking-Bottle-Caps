@@ -6,17 +6,20 @@
 
 .table {
   width: min(100%, 680px);
-  height: 1000px;
+  height: 1586px;
   margin: 0 auto;
   overflow: visible;
   --launch-bottom: 340px;
 }
 
 .table .start-line {
-  bottom: calc(var(--launch-bottom) + 29px);
+  bottom: calc(var(--launch-bottom) + var(--cap-height, 58px) / 2);
 }
 
 .table .cap {
+  width: var(--cap-width, 58px);
+  height: var(--cap-height, 58px);
+  left: calc(50% - var(--cap-width, 58px) / 2);
   transform: translateX(var(--cap-x, 0px));
   transition: none;
   will-change: transform;
@@ -37,16 +40,31 @@
 }
 
 .table .aim-guide {
-  bottom: calc(var(--launch-bottom) + 29px);
+  bottom: calc(var(--launch-bottom) + var(--cap-height, 58px) / 2);
+  z-index: 2;
+}
+
+.table .cap.waiting {
+  opacity: .45;
+  cursor: default;
+}
+
+.table .cap.impact {
+  box-shadow: 0 0 0 6px #fff9, 0 0 24px #ffe69c;
+}
+
+.cap-face { display: block; font-size: clamp(7px, 1vw, 10px); }
+
+.table .aim-guide span { transform: translateY(-100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cap-face { transform: none !important; }
 }
 
 @media (max-width: 900px) {
-  .table { height: 940px; }
+  .table { height: 1466px; }
 }
 
 @media (max-width: 520px) {
-  .table { height: 880px; }
-  .table .start-line, .table .aim-guide {
-    bottom: calc(var(--launch-bottom) + 25px);
-  }
+  .table { height: 1362px; }
 }

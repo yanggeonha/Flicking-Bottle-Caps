@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { TABLE, startPosition, simulateShot } = require('./physics');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,8 +29,9 @@ function publicRoom(room) {
     round: room.round,
     hostId: room.hostId,
     turnIndex: room.turnIndex,
-    players: room.players.map(({ id, name, cap, distance, finished, connected }) => ({
-      id, name, cap, distance, finished, connected
+    table: TABLE,
+    players: room.players.map(({ id, name, cap, distance, finished, connected, position, out, angle }) => ({
+      id, name, cap, distance, finished, connected, position, out, angle
     }))
   };
 }
@@ -40,6 +42,15 @@ function broadcast(room) {
 
 function fail(socket, message) {
   socket.emit('game:error', message);
+}
+
+function resetRound(room) {
+  room.status = 'playing';
+  room.turnIndex = 0;
+  room.players.forEach((p, i) => {
+    p.distance = null; p.finished = false; p.out = false; p.angle = 0;
+    p.position = startPosition(i, room.players.length);
+  });
 }
 
 io.on('connection', socket => {
@@ -74,40 +85,44 @@ io.on('connection', socket => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.hostId !== socket.id) return fail(socket, '방장만 시작할 수 있어요.');
     if (room.players.length < 2) return fail(socket, '두 명 이상 모여야 시작할 수 있어요.');
-    room.status = 'playing';
-    room.turnIndex = 0;
-    room.players.forEach(p => { p.distance = null; p.finished = false; });
+    if (room.status !== 'lobby') return;
+    resetRound(room);
     broadcast(room);
   });
 
-  socket.on('game:flick', ({ power } = {}) => {
+  socket.on('game:flick', ({ power, aim } = {}) => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.status !== 'playing') return;
     const player = room.players[room.turnIndex];
     if (!player || player.id !== socket.id || player.finished) return fail(socket, '지금은 내 차례가 아니에요.');
-    power = Math.max(0.08, Math.min(1, Number(power) || 0));
-    player.distance = power * 125;
+    const simulation = simulateShot(room.players, player.id, power, aim);
     player.finished = true;
-    const duration = Math.round(1400 - power * 820);
     room.status = 'flying';
-    io.to(room.code).emit('game:flicked', { playerId: player.id, power, distance: player.distance, duration });
+    const launchDuration = 120;
+    io.to(room.code).emit('game:simulation', {
+      playerId: player.id, round: room.round, launchDuration,
+      frames: simulation.frames, collisions: simulation.collisions, duration: simulation.duration
+    });
     const round = room.round;
     setTimeout(() => {
       if (rooms.get(room.code) !== room || room.round !== round || room.status !== 'flying') return;
+      for (const result of simulation.results) {
+        const target = room.players.find(p => p.id === result.id);
+        if (target) Object.assign(target, result);
+      }
       const next = room.players.findIndex(p => !p.finished);
       room.turnIndex = next < 0 ? room.players.length : next;
       room.status = next < 0 ? 'finished' : 'playing';
       broadcast(room);
-    }, duration + 120);
+    }, launchDuration + simulation.duration + 150);
   });
 
   socket.on('game:restart', () => {
     const room = rooms.get(socket.data.roomCode);
     if (!room || room.hostId !== socket.id) return fail(socket, '방장만 다시 시작할 수 있어요.');
-    room.status = 'playing';
+    if (room.status !== 'finished') return;
     room.round += 1;
-    room.turnIndex = 0;
-    room.players.forEach(p => { p.distance = null; p.finished = false; });
+    resetRound(room);
     broadcast(room);
   });
 
@@ -125,8 +140,9 @@ io.on('connection', socket => {
     if (!room.players.length) return rooms.delete(room.code);
     if (room.hostId === socket.id) room.hostId = room.players[0].id;
     if (room.status === 'playing') {
-      room.turnIndex = Math.min(room.turnIndex, room.players.length - 1);
-      if (room.players.every(p => p.finished)) room.status = 'finished';
+      const next = room.players.findIndex(p => !p.finished);
+      room.turnIndex = next < 0 ? room.players.length : next;
+      if (next < 0) room.status = 'finished';
     }
     broadcast(room);
   });
