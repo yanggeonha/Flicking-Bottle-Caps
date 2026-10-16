@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ed3b2f" />
+  <title>딱! 병뚜껑 챔피언십</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="grain"></div>
+  <header>
+    <div class="brand"><span class="brand-mark">딱!</span><div><strong>병뚜껑 챔피언십</strong><small>BOTTLE CAP FLICK</small></div></div>
+    <div id="roomBadge" class="room-badge hidden">ROOM <b id="roomCodeTop"></b></div>
+  </header>
+
+  <main>
+    <section id="home" class="home-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">손끝으로 가르는 단 한 번의 승부</p>
+        <h1>끝에 가까울수록,<br><em>당신이 챔피언.</em></h1>
+        <p class="description">병뚜껑을 아래로 당겼다가 놓으세요.<br>테이블 끝에 가장 가깝게 멈춘 사람이 승리합니다.</p>
+        <div class="how"><span>01. 아래로 당기기</span><i></i><span>02. 손 놓기</span><i></i><span>03. 끝에 멈추기</span></div>
+      </div>
+      <div class="entry-card">
+        <div class="tabs"><button class="tab active" data-tab="create">방 만들기</button><button class="tab" data-tab="join">핀 번호로 입장</button></div>
+        <label>닉네임<input id="nameInput" maxlength="12" placeholder="선수 이름을 입력하세요" autocomplete="off"></label>
+        <div id="pinField" class="hidden"><label>4자리 핀 번호<input id="pinInput" inputmode="numeric" maxlength="4" placeholder="0000"></label></div>
+        <p class="cap-label">나의 병뚜껑</p>
+        <div id="capPicker" class="cap-picker"></div>
+        <button id="enterButton" class="primary">새 게임 만들기 <span>→</span></button>
+        <p id="errorText" class="error"></p>
+      </div>
+    </section>
+
+    <section id="game" class="game-layout hidden">
+      <div class="arena-wrap">
+        <div class="match-head"><div><small>ROUND <b id="roundNumber">1</b></small><h2 id="statusTitle">선수 대기실</h2></div><div class="pin-display"><span>입장 PIN</span><b id="roomCode"></b><button id="copyPin">복사</button></div></div>
+        <div class="table-scene">
+          <div class="far-label">TABLE EDGE · 넘으면 탈락!</div>
+          <div id="table" class="table">
+            <div class="edge-line"></div>
+            <div class="start-line"><span>START</span></div>
+            <div id="capsLayer"></div>
+            <div id="aimGuide" class="aim-guide hidden"><span></span></div>
+          </div>
+          <p id="turnGuide" class="turn-guide">참가자를 기다리고 있어요.</p>
+          <div id="powerWrap" class="power-wrap hidden"><span>POWER</span><div class="power-track"><i id="powerFill"></i><b></b></div><strong id="powerValue">0%</strong></div>
+        </div>
+        <div id="lobbyActions" class="lobby-actions"><p><b id="playerCount">1</b>/8명의 선수가 참가했어요</p><button id="startButton" class="primary">게임 시작 <span>→</span></button></div>
+      </div>
+
+      <aside class="ranking-panel">
+        <div class="ranking-title"><div><small>LIVE</small><h3>현재 순위</h3></div><span id="roundBadge">ROUND 1</span></div>
+        <div id="rankingList" class="ranking-list"></div>
+        <div class="legend"><span><i class="dot safe"></i>테이블 위</span><span><i class="dot wait"></i>도전 대기</span></div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="resultModal" class="modal hidden"><div class="modal-card"><div class="confetti">✦　·　✦</div><p>CHAMPION</p><h2><span id="winnerName"></span>님<br>축하합니다!</h2><div id="winnerCap" class="winner-cap"></div><p id="winnerScore" class="winner-score"></p><div id="hostResultActions" class="result-actions hidden"><button id="restartButton" class="primary">다시 시작</button><button id="endButton" class="secondary">게임 종료</button></div><p id="guestWait" class="guest-wait">방장의 다음 선택을 기다리고 있어요…</p></div></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

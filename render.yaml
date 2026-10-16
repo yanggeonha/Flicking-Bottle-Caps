@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: bottle-cap-championship
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.1
